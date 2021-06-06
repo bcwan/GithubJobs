@@ -7,7 +7,8 @@ const ACTIONS = {
   ERROR: 'error'
 };
 
-const BASE_URL = 'https://jobs.github.com/positions.json';
+const CORS_PROXY_SERVER = 'https://secret-ocean-49799.herokuapp.com/';
+const BASE_URL = `${CORS_PROXY_SERVER}https://jobs.github.com/positions.json`;
 
 function reducer(state, action) {
   switch (action.type) {
