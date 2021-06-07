@@ -4,7 +4,8 @@ import { useReducer, useEffect } from 'react';
 const ACTIONS = {
   MAKE_REQUEST: 'make-request',
   GET_DATA: 'get-data',
-  ERROR: 'error'
+  ERROR: 'error',
+  UPDATE_HAS_NEXT_PAGE: 'update-has-next-page'
 };
 
 const CORS_PROXY_SERVER = 'https://secret-ocean-49799.herokuapp.com/';
@@ -18,6 +19,8 @@ function reducer(state, action) {
       return { ...state, loading: false, jobs: action.payload.jobs };
     case ACTIONS.ERROR:
       return { ...state, laoding: false, error: action.payload.error, jobs: [] };
+    case ACTIONS.UPDATE_HAS_NEXT_PAGE:
+      return { ...state, hasNextPage: action.payload.hasNextPage };
     default:
       return state;
   }
@@ -39,8 +42,20 @@ export default function useFetchJobs(params, page) {
       dispatch({ type: ACTIONS.ERROR, payload: { error: e }});
     });
 
+    const cancelTokenHasNextPage = axios.CancelToken.source();
+    axios.get(BASE_URL, {
+      cancelToken: cancelTokenHasNextPage.token,
+      params: { markdown: true, page: page, ...params } 
+    }).then(res => {
+      dispatch({ type: ACTIONS.UPDATE_HAS_NEXT_PAGE, payload: { hasNextPage: res.data.length !== 0 }});
+    }).catch(e => {
+      if (axios.isCancel(e)) return;
+      dispatch({ type: ACTIONS.ERROR, payload: { error: e }});
+    });
+
     return () => {
       cancelToken.cancel();
+      cancelTokenHasNextPage.cancel();
     }
   }, [params, page]);
 
